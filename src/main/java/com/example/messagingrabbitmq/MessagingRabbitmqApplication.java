@@ -1,9 +1,6 @@
 package com.example.messagingrabbitmq;
 
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.BindingBuilder;
-import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter;
@@ -11,12 +8,14 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
+import java.util.UUID;
+
 @SpringBootApplication
 public class MessagingRabbitmqApplication {
 
-	static final String topicExchangeName = "spring-boot-exchange";
+	static final String fanoutExchangeName = "fanout-exchange";
 
-	static final String queueName = "spring-boot";
+	static final String queueName = UUID.randomUUID().toString();
 
 	@Bean
 	Queue queue() {
@@ -24,13 +23,13 @@ public class MessagingRabbitmqApplication {
 	}
 
 	@Bean
-	TopicExchange exchange() {
-		return new TopicExchange(topicExchangeName);
+	FanoutExchange exchange() {
+		return new FanoutExchange(fanoutExchangeName, true, false);
 	}
 
 	@Bean
-	Binding binding(Queue queue, TopicExchange exchange) {
-		return BindingBuilder.bind(queue).to(exchange).with("foo.bar.#");
+	Binding binding(Queue queue, FanoutExchange exchange) {
+		return BindingBuilder.bind(queue).to(exchange);
 	}
 
 	@Bean
@@ -48,7 +47,7 @@ public class MessagingRabbitmqApplication {
 		return new MessageListenerAdapter(receiver, "receiveMessage");
 	}
 
-	public static void main(String[] args) throws InterruptedException {
+	public static void main(String[] args) {
 		SpringApplication.run(MessagingRabbitmqApplication.class, args).close();
 	}
 
